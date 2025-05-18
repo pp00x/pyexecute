@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+httpx
+python-dotenv # For loading .env file during local development of the gateway

@@ -1,0 +1,29 @@
+# Dockerignore for the PyExecute Executor Service
+
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+# If you create a venv directly in this folder, e.g., .venv_executor
+.venv_executor/ 
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE / Editor specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local environment files (if any are ever placed here)
+.env
+.env.*
+!.env.example # If you decide to have an example here
+
+# Git folder (should not be in context anyway if building from a clean checkout, but good practice)
+.git
