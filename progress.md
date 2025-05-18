@@ -60,35 +60,37 @@
 *   **Next Steps (were):** M1.8.
 
 ---
-## YYYY-MM-DD (Current Day - M1.8 Finalized Decoupled Arch & Strict Env Config)
+## YYYY-MM-DD (Current Day - M1.8 Finalized Deployment Preparations)
 
-*   **Task:** M1.8 - Decoupled Architecture, Executor Service, Security, Local Dev Env Setup, API Path Refinements, Strict Environment Variable Configuration
+*   **Task:** M1.8 - Decoupled Architecture, Executor Service, Security, Local Dev Env, API Path Refinements, Strict Env Config, Vercel Config for Gateway
 *   **Details:**
-    *   Decided to decouple Docker execution into a separate Flask-based Executor Service.
-    *   Created Executor Service in `backend/executor_service/` (`app.py`, `requirements.txt`, `Dockerfile`).
-        *   Executor service endpoint set to `/internal/execute-script`.
-    *   Image for executor: `prashantpatildev/pyexecute-executor:latest` (Flask-based).
-    *   Refactored main FastAPI app (`backend/app/main.py`) to be an API Gateway:
-        *   Endpoint set to `/api/execute`.
-        *   Calls the Executor Service at `/internal/execute-script`.
-    *   Implemented shared secret authentication between Gateway and Executor Service.
-    *   Updated `backend/requirements.txt` for Gateway (added `httpx`, `python-dotenv`; removed `docker`).
-    *   Added `python-dotenv` to Gateway (`backend/app/main.py`) to load a root `.env` file.
+    *   Finalized decoupled architecture: FastAPI Gateway and Flask-based Executor Service.
+    *   Project root is `pyexecute/`. Executor service code in `executor_service/`, Gateway API code in `gateway_api/`.
+    *   Executor Service (`executor_service/app.py` & `Dockerfile`):
+        *   Endpoint: `/internal/execute-script`. Requires `EXECUTOR_SHARED_SECRET`.
+        *   Docker image: `prashantpatildev/pyexecute-executor-service:latest` (user to build/push).
+    *   FastAPI Gateway (`gateway_api/app/main.py`):
+        *   Endpoint: `/api/execute`. Calls Executor Service.
+        *   Requires `EXECUTOR_SERVICE_URL`, `GATEWAY_EXECUTOR_AUTH_TOKEN`, `CORS_ALLOWED_ORIGINS`.
+        *   Strict environment variable usage (no fallbacks).
+    *   Added `python-dotenv` to Gateway for local dev convenience via root `.env` file.
     *   Created root `.env.example` for Gateway's local development settings.
-    *   **Hardened Environment Variable Usage:**
-        *   FastAPI Gateway (`main.py`): `EXECUTOR_SERVICE_URL`, `GATEWAY_EXECUTOR_AUTH_TOKEN`, and `CORS_ALLOWED_ORIGINS` must now be explicitly set via environment variables (no fallbacks, even in development for CORS). Application will log critical errors or fail requests if these are not configured.
-        *   Flask Executor (`executor_service/app.py`): `EXECUTOR_SHARED_SECRET` must be explicitly set (already implemented to fail if not).
-    *   Local end-to-end flow is conceptually ready for testing with both services running and configured via `.env` files and explicit environment variables.
+    *   Created `vercel.json` at project root (`pyexecute/`) to configure deployment of the `gateway_api/app/main.py` to Vercel.
+        *   `vercel.json` uses `version: 2` and paths relative to `gateway_api/` if Vercel Root Directory is set to `gateway_api/`.
 *   **Next Steps for User:**
-    1.  Create/update root `.gitignore` to include `.env`.
-    2.  Create `pyexecute/.env` from `.env.example` for the Gateway, ensuring all required variables are set.
-    3.  Create `pyexecute/backend/executor_service/.env.local` (or similar for Docker run) for the Executor's `EXECUTOR_SHARED_SECRET`.
-    4.  Rebuild and re-push `prashantpatildev/pyexecute-executor:latest` (Flask-based with auth and updated endpoint) if not already done after all latest changes.
-    5.  Run both services locally to test integration with new paths, auth, and strict env var requirements.
-    6.  Proceed with M1.8: Deployment of both services.
-        *   Deploy Flask Executor Service, setting `EXECUTOR_SHARED_SECRET`.
-        *   Deploy FastAPI API Gateway, setting `APP_ENV=production`, `EXECUTOR_SERVICE_URL`, `GATEWAY_EXECUTOR_AUTH_TOKEN`, and `CORS_ALLOWED_ORIGINS`.
-    7.  Configure deployed Next.js frontend's `NEXT_PUBLIC_BACKEND_API_URL` to point to the deployed FastAPI Gateway (base URL).
-    8.  Thoroughly test the fully deployed application.
+    1.  Ensure all code (including `vercel.json`, `gateway_api/`, `executor_service/`) is committed and pushed to Git.
+    2.  Create/update root `.gitignore` to include `.env`.
+    3.  Create `pyexecute/.env` from `.env.example` for local Gateway testing.
+    4.  Create `pyexecute/executor_service/.env.local` (or similar for Docker run) for Executor's `EXECUTOR_SHARED_SECRET` for local testing.
+    5.  Rebuild and re-push `prashantpatildev/pyexecute-executor-service:latest` (Flask-based with auth and correct endpoint) if not already done after all latest changes.
+    6.  Run both services locally to test integration.
+    7.  **Deploy Flask Executor Service:**
+        *   To a Docker hosting platform (e.g., Fly.io, Railway, Render Docker service).
+        *   Set `EXECUTOR_SHARED_SECRET` environment variable. Note its public URL.
+    8.  **Deploy FastAPI API Gateway to Vercel:**
+        *   Import Git repo to Vercel. Set Vercel Project's "Root Directory" to `gateway_api/`.
+        *   Set environment variables on Vercel: `APP_ENV=production`, `EXECUTOR_SERVICE_URL` (to deployed executor's URL), `GATEWAY_EXECUTOR_AUTH_TOKEN` (matching executor's secret), `CORS_ALLOWED_ORIGINS` (to deployed frontend's URL).
+    9.  Configure deployed Next.js frontend's `NEXT_PUBLIC_BACKEND_API_URL` to point to the deployed FastAPI Gateway (base URL, e.g., `https://your-gateway.vercel.app`).
+    10. Thoroughly test the fully deployed application.
 
 ---
